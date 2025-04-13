@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>值班排班系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('index') }}">值班表</a>
+        <a href="{{ url_for('staff') }}">人员管理</a>
+    </nav>
+    {% block content %}{% endblock %}
+</body>
+</html>

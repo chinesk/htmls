@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>值班人员管理</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .add-staff {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .add-staff input[type="text"] {
+            padding: 8px 15px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        .btn-add {
+            background-color: #28a745;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-add:hover {
+            background-color: #218838;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>值班人员管理</h1>
+        
+        <div class="add-staff">
+            <form action="{{ url_for('add_staff') }}" method="post">
+                <input type="text" name="name" placeholder="输入人员姓名" required>
+                <select name="position" required>
+                    <option value="">--请选择岗位--</option>
+                    {% for position in display_positions %}
+                    <option value="{{ position }}">{{ position }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-add">添加人员</button>
+            </form>
+        </div>
+        
+        <div class="position-filter">
+            <select id="position-filter" onchange="filterStaff()">
+                <option value="">所有岗位</option>
+                {% for group in position_groups %}
+                <option value="{{ group }}">{{ group }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <script>
+        function filterStaff() {
+            var selectedGroup = document.getElementById('position-filter').value;
+            var rows = document.getElementsByClassName('staff-row');
+            
+            for (var i = 0; i < rows.length; i++) {
+                var position = rows[i].getAttribute('data-position');
+                if (selectedGroup === '' || position === selectedGroup) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        }
+        </script>
+        
+        <div class="staff-list">
+            {% if staff %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>姓名</th>
+                            <th>岗位组</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for id, name, position in staff %}
+                        <tr class="staff-row" data-position="{{ position }}">
+                            <td>{{ loop.index }}</td>
+                            <td>{{ name }}</td>
+                            <td>{{ position }}</td>
+                            <td>
+                                <button class="btn-delete" onclick="if(confirm('确定要删除 {{ name }} 吗？')) { window.location.href='{{ url_for('delete_staff', id=id) }}'; }">删除</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="no-data">
+                    <p>当前没有值班人员，请添加。</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <script>
+        function filterStaff() {
+            var position = document.getElementById('position-filter').value;
+            var rows = document.getElementsByClassName('staff-row');
+            
+            for (var i = 0; i < rows.length; i++) {
+                if (position === '' || rows[i].getAttribute('data-position') === position) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        }
+        </script>
+        
+        
+        
+        <a href="{{ url_for('index') }}" class="back-link">返回值班表</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>值班排班系统</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <!-- 添加以下样式代码 -->
+        <style>
+            /* 基础样式 */
+            table td select {
+                background-color: white !important;
+                border: 1px solid #ddd !important;
+                padding: 5px;
+                border-radius: 4px;
+                width: 100%;
+                transition: all 0.3s ease;
+            }
+            
+            /* 已选择状态 */
+            table td select:has(option:checked:not([value=""])) {
+                background-color: #e8f5e9 !important;
+                border: 1px solid #4caf50 !important;
+            }
+            
+            /* 焦点状态 */
+            table td select:focus {
+                outline: none;
+                border-color: #2e7d32 !important;
+                box-shadow: 0 0 5px rgba(76, 175, 80, 0.5) !important;
+            }
+        </style>
+    </head>
+<body>
+    <nav>
+        <a href="{{ url_for('index') }}">值班表</a>
+        <a href="{{ url_for('staff') }}">人员管理</a>
+    </nav>
+    <div class="container">
+        <h1>{{ current_year }}年{{ current_month }}月值班表</h1>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    {% for position in positions %}
+                    <th>{{ position }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in days_range %}
+                <tr>
+                    <td>{{ day }}日</td>
+                    {% for position in positions %}
+                    <td>
+                        <select onchange="updateDuty('{{ current_year }}-{{ '%02d' % current_month }}-{{ '%02d' % day }}', '{{ position }}', this.value)">
+                            <option value="">--请选择--</option>
+                            {% if staff_by_position and position in staff_by_position %}
+                                {% for name in staff_by_position[position] %}
+                                <option value="{{ name }}" {% if schedule.get((current_year|string + '-' + '%02d' % current_month + '-' + '%02d' % day, position)) == name %}selected{% endif %}>
+                                    {{ name }}
+                                </option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if stats_img %}
+        <div class="stats-container">
+            <h2>值班统计</h2>
+            <img src="data:image/png;base64,{{ stats_img }}" alt="值班统计图" id="stats-chart">
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+
+       function updateDuty(date, position, staff_name) {
+        const selectElement = event.target;
+        
+        // 立即更新样式
+        if (staff_name) {
+            selectElement.style.backgroundColor = '#e8f5e9';
+            selectElement.style.borderColor = '#4caf50';
+        } else {
+            selectElement.style.backgroundColor = 'white';
+            selectElement.style.borderColor = '#ddd';
+        }
+        
+        // 原有的 Ajax 请求
+        $.ajax({
+        url: '{{ url_for("update_duty") }}',
+        method: 'POST',
+        data: {
+            date: date,
+            position: position,
+            staff_name: staff_name
+        },
+        success: function(response) {
+            console.log("值班安排已保存");
+            if (response.stats_img) {
+                $('.stats-container img').attr('src', 'data:image/png;base64,' + response.stats_img);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("保存值班安排失败:", error);
+            alert("保存值班安排失败，请重试");
+        }
+    });
+    }
+    
+    // 页面加载完成后初始化样式
+    document.addEventListener('DOMContentLoaded', function() {
+        const selects = document.querySelectorAll('table td select');
+        selects.forEach(function(select) {
+            const selectedValue = select.value;
+            if (selectedValue && selectedValue !== '') {
+                select.style.backgroundColor = '#e8f5e9';
+                select.style.borderColor = '#4caf50';
+            } else {
+                select.style.backgroundColor = 'white';
+                select.style.borderColor = '#ddd';
+            }
+        });
+    });
+    </script>
+</body>
+</html>
